@@ -1,0 +1,16 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /usr/local/var/info/sobo-kt-app-tpl/soboCryptoLib/src/androidMain/AndroidManifest.xml:2:1-72
+INJECTED from /usr/local/var/info/sobo-kt-app-tpl/soboCryptoLib/src/androidMain/AndroidManifest.xml:2:1-72
+	package
+		INJECTED from /usr/local/var/info/sobo-kt-app-tpl/soboCryptoLib/src/androidMain/AndroidManifest.xml
+	xmlns:android
+		ADDED from /usr/local/var/info/sobo-kt-app-tpl/soboCryptoLib/src/androidMain/AndroidManifest.xml:2:11-69
+uses-sdk
+INJECTED from /usr/local/var/info/sobo-kt-app-tpl/soboCryptoLib/src/androidMain/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /usr/local/var/info/sobo-kt-app-tpl/soboCryptoLib/src/androidMain/AndroidManifest.xml
+INJECTED from /usr/local/var/info/sobo-kt-app-tpl/soboCryptoLib/src/androidMain/AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from /usr/local/var/info/sobo-kt-app-tpl/soboCryptoLib/src/androidMain/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /usr/local/var/info/sobo-kt-app-tpl/soboCryptoLib/src/androidMain/AndroidManifest.xml
