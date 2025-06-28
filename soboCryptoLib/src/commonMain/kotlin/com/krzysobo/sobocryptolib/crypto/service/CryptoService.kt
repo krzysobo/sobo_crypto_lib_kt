@@ -185,72 +185,6 @@ class CryptoService {
         }
     }
 
-    fun aesGcmEncryptToPortableHexForDh(
-        plaintext: ByteArray,
-        aesKey: ByteArray,
-        nonce: ByteArray,
-        ourPublicKey: ByteArray,
-        associatedData: ByteArray? = null,
-        salt: ByteArray? = null,
-        plaintextStartOffset: Int = 0,
-        ciphertextStartOffset: Int = 0,
-        nonceSizeBits: Int = 8 * 13,
-        macSizeBits: Int = 128,
-        portableHexFormat: String = SCC_CIPHERDATA_FORMAT_ZIG_DH
-    ): String {
-        // {ciphertext}{tag - 16 bytes}
-
-        // format: W{cipher_hex}H{tag_hex}H{aad_tex_hex}H[{salt_hex}]H{nonce_hex}H{our_public_key_hex}W
-        /*
-                try xargs.append('W');
-        try xargs.appendSlice(cipher_hex);
-        try xargs.append('H');
-        try xargs.appendSlice(tag_hex);
-        try xargs.append('H');
-        try xargs.appendSlice(aad_text_hex);
-        try xargs.append('H');
-        try xargs.appendSlice(salt_hex);
-        try xargs.append('H');
-        try xargs.appendSlice(nonce_hex);
-        try xargs.append('H');
-        try xargs.appendSlice(our_public_key_hex);
-
-        if (add_next_public_key) {
-            try xargs.append('H');
-            try xargs.appendSlice(&self.our_next_public_key);
-        }
-        try xargs.append('W');
-
-         */
-        val ciphertextWithTag = aesGcmEncrypt(
-            plaintext = plaintext,
-            aesKey = aesKey,
-            nonce = nonce,
-            associatedData = associatedData,
-            plaintextStartOffset = plaintextStartOffset,
-            ciphertextStartOffset = ciphertextStartOffset,
-            nonceSizeBits = nonceSizeBits,
-            macSizeBits = macSizeBits
-        )
-
-        when (portableHexFormat) {
-            SCC_CIPHERDATA_FORMAT_ZIG_DH -> {
-                val ctSize = ciphertextWithTag.size
-                val ciphertext = ciphertextWithTag.copyOfRange(0, ctSize - 16)
-                val tag = ciphertextWithTag.copyOfRange(ctSize - 16, ctSize)
-                return PATTERN_SCC_CIPHERDATA_FORMAT_ZIG_DH(
-                    CryptoService().bytesToHex(ciphertext),
-                    CryptoService().bytesToHex(tag),
-                    CryptoService().bytesToHex(associatedData ?: byteArrayOf()),
-                    "", // salt - currently unused
-                    CryptoService().bytesToHex(nonce),
-                    CryptoService().bytesToHex(ourPublicKey),
-                )
-            }
-
-            else -> throw InvalidPortableHexFormatException("incorrect portable hex format")
-        }
-    }
 
     fun aesGcmEncrypt(
         plaintext: ByteArray,
@@ -365,6 +299,8 @@ class CryptoService {
     }
 
 
+    // ======================= DIFFIE HELLMAN'S ======================
+
     fun makeDhKeyPair(keySizeBits: Int = 256): AsymmetricCipherKeyPair {
         val random = SecureRandom()
         val keyGenerationParams = KeyGenerationParameters(random, keySizeBits)
@@ -421,6 +357,114 @@ class CryptoService {
         keySizeBytes: Int = 32
     ): ByteArray {
         return sharedSecret.copyOf(keySizeBytes) // Simple truncation
+    }
+
+    fun aesGcmEncryptToPortableHexForDh(
+        plaintext: ByteArray,
+        aesKey: ByteArray,
+        nonce: ByteArray,
+        ourPublicKey: ByteArray,
+        associatedData: ByteArray? = null,
+        salt: ByteArray? = null,
+        plaintextStartOffset: Int = 0,
+        ciphertextStartOffset: Int = 0,
+        nonceSizeBits: Int = 8 * 13,
+        macSizeBits: Int = 128,
+        portableHexFormat: String = SCC_CIPHERDATA_FORMAT_ZIG_DH
+    ): String {
+        // {ciphertext}{tag - 16 bytes}
+
+        // format: W{cipher_hex}H{tag_hex}H{aad_tex_hex}H[{salt_hex}]H{nonce_hex}H{our_public_key_hex}W
+        /*
+                try xargs.append('W');
+        try xargs.appendSlice(cipher_hex);
+        try xargs.append('H');
+        try xargs.appendSlice(tag_hex);
+        try xargs.append('H');
+        try xargs.appendSlice(aad_text_hex);
+        try xargs.append('H');
+        try xargs.appendSlice(salt_hex);
+        try xargs.append('H');
+        try xargs.appendSlice(nonce_hex);
+        try xargs.append('H');
+        try xargs.appendSlice(our_public_key_hex);
+
+        if (add_next_public_key) {
+            try xargs.append('H');
+            try xargs.appendSlice(&self.our_next_public_key);
+        }
+        try xargs.append('W');
+
+         */
+        val ciphertextWithTag = aesGcmEncrypt(
+            plaintext = plaintext,
+            aesKey = aesKey,
+            nonce = nonce,
+            associatedData = associatedData,
+            plaintextStartOffset = plaintextStartOffset,
+            ciphertextStartOffset = ciphertextStartOffset,
+            nonceSizeBits = nonceSizeBits,
+            macSizeBits = macSizeBits
+        )
+
+        when (portableHexFormat) {
+            SCC_CIPHERDATA_FORMAT_ZIG_DH -> {
+                val ctSize = ciphertextWithTag.size
+                val ciphertext = ciphertextWithTag.copyOfRange(0, ctSize - 16)
+                val tag = ciphertextWithTag.copyOfRange(ctSize - 16, ctSize)
+                return PATTERN_SCC_CIPHERDATA_FORMAT_ZIG_DH(
+                    CryptoService().bytesToHex(ciphertext),
+                    CryptoService().bytesToHex(tag),
+                    CryptoService().bytesToHex(associatedData ?: byteArrayOf()),
+                    "", // salt - currently unused
+                    CryptoService().bytesToHex(nonce),
+                    CryptoService().bytesToHex(ourPublicKey),
+                )
+            }
+
+            else -> throw InvalidPortableHexFormatException("incorrect portable hex format")
+        }
+    }
+
+    @OptIn(ExperimentalStdlibApi::class)
+    fun aesGcmDecryptFromDhPortableHex(
+        ciphertextHex: String,
+        aesKey: ByteArray,
+        ourPublicKey: ByteArray,
+        macSizeBits: Int = 128,
+        plaintextStartOffset: Int = 0,
+        ciphertextStartOffset: Int = 0
+    ): ByteArray {
+        /*  W{cipher_hex}H{tag_hex}H{aad_tex_hex}H[{salt_hex}]H{nonce_hex}H{our_public_key_hex}W */
+        if (ciphertextHex.startsWith("W") &&
+            ciphertextHex.endsWith("W") &&
+            (Regex("H").findAll(ciphertextHex).count() == 5)
+        ) { // KOTLIN
+            val listHexes = ciphertextHex.trim('W').split("H")
+            print("LIST HEXES KT: $listHexes")
+
+            val ciphertextHexAlone = listHexes[0]
+            val tagHex = listHexes[1]
+            val aadTextHex = listHexes[2]
+            // val saltHex = listHexes[3]
+            val nonceHex = listHexes[4]
+            val ourPublicKeyHex = listHexes[5]
+
+            val ciphertextAndTagHexes = "${ciphertextHexAlone}${tagHex}"
+
+            return aesGcmDecrypt(
+                ciphertextAndTagHexes.hexToByteArray(),
+                aesKey,
+                nonceHex.hexToByteArray(),
+                aadTextHex.hexToByteArray(),
+                macSizeBits,
+                plaintextStartOffset,
+                ciphertextStartOffset
+            )
+
+        } else {
+            throw InvalidPortableHexFormatException("incorrect portable hex format (ZIG_DH)")
+        }
     }
 
 
